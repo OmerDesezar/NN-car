@@ -1,10 +1,10 @@
-class Controls {
+export class Controls {
   constructor(type) {
-    this.forward = "DUMMY" == type ? true : false;
+    this.forward = "DUMMY" === type ? true : false;
     this.reverse = false;
     this.left = false;
     this.right = false;
-    "KEYS" == type && this.#addKeyboardListeners();
+    "KEYS" === type && this.#addKeyboardListeners();
   }
 
   #setMovement(key, bool) {
