@@ -2,7 +2,7 @@ export type NetworkLevel = {
 	inputs: number[];
 	outputs: number[];
 	biases: number[];
-	weights: number[];
+	weights: number[][];
 };
 
 export type Network = {
@@ -15,8 +15,8 @@ export type Road = {
 	laneCount: number;
 	left: number;
 	right: number;
-	top: 10000000;
-	bottom: -10000000;
+	top: number;
+	bottom: number;
 	topLeft: Coord;
 	topRight: Coord;
 	bottomLeft: Coord;
@@ -52,6 +52,7 @@ export type Car = {
 	maxSpeed: number;
 	acceleration: number;
 	damaged: boolean;
+	polygon: Coord[];
 	useBrain: boolean;
 	controls: Controls;
 	brain?: Network;
@@ -63,3 +64,5 @@ export type Coord = {
 	y: number;
 	offset?: number;
 };
+
+export type ControlType = "KEYS" | "AI" | "DUMMY";
