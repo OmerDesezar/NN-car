@@ -14,7 +14,7 @@ export const makeSensor = (car: Car): Sensor => {
 
 export const updateSensor = (
 	sensor: Sensor,
-	roadBorders: Coord[],
+	roadBorders: Coord[][],
 	traffic: Car[]
 ): void => {
 	updateSensorRays(sensor);
@@ -62,7 +62,7 @@ const updateSensorRays = (sensor: Sensor): void => {
 
 const getSensorReadings = (
 	sensor: Sensor,
-	roadBorders: Coord[],
+	roadBorders: Coord[][],
 	traffic: Car[]
 ): void => {
 	sensor.readings = [];
@@ -73,7 +73,7 @@ const getSensorReadings = (
 
 const getSensorReading = (
 	ray: Coord[],
-	roadBorders: Coord[],
+	roadBorders: Coord[][],
 	traffic: Car[]
 ): Coord | null => {
 	const touches = [];

@@ -3,7 +3,7 @@ import { lerp } from "./logicUtils";
 
 let road: Road = null;
 
-const setRoad = (x: number, width: number, laneCount: number = 3) => {
+export const setRoad = (x: number, width: number, laneCount: number = 3) => {
 	const left = x - width / 2;
 	const right = x + width / 2;
 	const top = 10000000;
@@ -32,7 +32,7 @@ const setRoad = (x: number, width: number, laneCount: number = 3) => {
 	};
 };
 
-const getLaneCenter = (laneIndex: number = 0) => {
+export const getLaneCenter = (laneIndex: number = 0) => {
 	const laneWidth = road.width / road.laneCount;
 	return (
 		road.left +
@@ -41,7 +41,11 @@ const getLaneCenter = (laneIndex: number = 0) => {
 	);
 };
 
-const drawRoad = (ctx: any) => {
+export const getRoadBorders = () => road.borders;
+
+export const getLaneCount = () => road.laneCount;
+
+export const drawRoad = (ctx: any) => {
 	ctx.lineWidth = 5;
 	ctx.strokeStyle = "white";
 

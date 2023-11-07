@@ -1,4 +1,5 @@
 import { Network, NetworkLevel } from "../types";
+import { getFirstCar } from "./carLogic";
 import { getRGBA, lerp } from "./logicUtils";
 
 export const makeNetwork = (neuronCount: number[]): Network => {
@@ -66,7 +67,7 @@ export const networkFeedForward = (
 	return network.levels[network.levels.length - 1].outputs;
 };
 
-const mutateNetwork = (network: Network, amount: number = 1): void => {
+export const mutateNetwork = (network: Network, amount: number = 1): void => {
 	network.levels.forEach((level) => {
 		for (let i = 0; i < level.biases.length; i++) {
 			level.biases[i] = lerp(level.biases[i], Math.random() * 2 - 1, amount);
@@ -81,6 +82,13 @@ const mutateNetwork = (network: Network, amount: number = 1): void => {
 			}
 		}
 	});
+};
+
+export const drawFirstCarNetwork = (ctx, time, frameCount) => {
+	ctx.reset();
+	ctx.canvas.height = window.innerHeight * 0.5;
+	ctx.lineDashOffset = -time / 50;
+	drawNetwork(ctx, getFirstCar().brain);
 };
 
 export const drawNetwork = (ctx: any, network: Network): void => {

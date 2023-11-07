@@ -1,11 +1,20 @@
 import { Car, ControlType, Coord } from "../types";
 import { makeControls } from "./controlsLogic";
-import { polyIntersect } from "./logicUtils";
-import { makeNetwork, networkFeedForward } from "./networkLogic";
+import { generateNumbersInRange, polyIntersect } from "./logicUtils";
+import { makeNetwork, mutateNetwork, networkFeedForward } from "./networkLogic";
+import {
+	drawRoad,
+	getLaneCenter,
+	getLaneCount,
+	getRoadBorders,
+} from "./roadLogic";
 import { drawSensor, makeSensor, updateSensor } from "./sensorLogic";
 
-const cars: Car[] = [];
-const traffic: Car[] = [];
+let cars: Car[] = [];
+let traffic: Car[] = [];
+let bestCar: Car;
+let firstCar: Car;
+let trafficId;
 
 const makeCar = (
 	x: number,
@@ -35,16 +44,81 @@ const makeCar = (
 
 	if ("DUMMY" !== type) {
 		car.sensor = makeSensor(car);
-		car.brain = makeNetwork([car.sensor.rayCount, 5, 5, 4]);
+		car.brain = makeNetwork([car.sensor.rayCount, 5, 4]);
 	}
 	return car;
+};
+
+export const restartSimulation = () => {
+	clearTraffic();
+	generateCars(1500);
+	generateTraffic();
+};
+
+const generateCars = (numOfCars: number) => {
+	for (let i = 0; i < numOfCars; i++) {
+		cars.push(makeCar(getLaneCenter(2), 100, 30, 50, 3, 0.2, "AI"));
+	}
+	if (bestCar) {
+		cars.forEach((car) => {
+			car.brain = bestCar.brain;
+			if (car !== bestCar) mutateNetwork(car.brain, 0.2);
+		});
+	}
+};
+
+export const getFirstCar = () => firstCar;
+export const clearTraffic = () => {
+	traffic = [];
+	clearTimeout(trafficId);
+	clearInterval(trafficId);
+};
+
+export const generateTraffic = () => {
+	traffic.push(
+		makeCar(getLaneCenter(2), -300, 30, 50, 2, 0.2, "DUMMY"),
+		makeCar(getLaneCenter(1), -600, 30, 50, 2, 0.2, "DUMMY"),
+		makeCar(getLaneCenter(3), -600, 30, 50, 2, 0.2, "DUMMY"),
+		makeCar(getLaneCenter(1), -900, 30, 50, 2, 0.2, "DUMMY"),
+		makeCar(getLaneCenter(2), -900, 30, 50, 2, 0.2, "DUMMY"),
+		makeCar(getLaneCenter(3), -900, 30, 50, 2, 0.2, "DUMMY"),
+		makeCar(getLaneCenter(0), -1200, 30, 50, 2, 0.2, "DUMMY"),
+		makeCar(getLaneCenter(1), -1200, 30, 50, 2, 0.2, "DUMMY"),
+		makeCar(getLaneCenter(3), -1200, 30, 50, 2, 0.2, "DUMMY"),
+		makeCar(getLaneCenter(4), -1200, 30, 50, 2, 0.2, "DUMMY")
+	);
+	trafficId = setTimeout(setTrafficInterval, 27000);
+};
+
+const setTrafficInterval = () => (trafficId = setInterval(spawnTraffic, 2000));
+
+const spawnTraffic = () => {
+	const numToSpawn = generateNumbersInRange(1, getLaneCount() - 1, 1)[0];
+	const carLanes = generateNumbersInRange(0, getLaneCount() - 1, numToSpawn);
+
+	carLanes.forEach((laneNum) =>
+		traffic.push(
+			makeCar(getLaneCenter(laneNum), firstCar.y - 750, 30, 50, 2, 0.2, "DUMMY")
+		)
+	);
+};
+
+export const filterUselessCars = () => {
+	cars = cars.filter(
+		(car) =>
+			car.y - firstCar.y < 250 &&
+			!car.damaged &&
+			car.speed > car.maxSpeed * 0.85
+	);
+	traffic = traffic.filter((tCar) => tCar.y - firstCar.y < 1500);
+	return cars.length === 0;
 };
 
 const drawCar = (
 	ctx: any,
 	color: string = "black",
-	shouldDrawSensor: boolean,
-	car: Car
+	car: Car,
+	shouldDrawSensor: boolean = false
 ): void => {
 	if (car.damaged) ctx.fillStyle = "gray";
 	else ctx.fillStyle = color;
@@ -59,7 +133,11 @@ const drawCar = (
 	ctx.fill();
 };
 
-const updateCar = (car: Car, roadBorders: Coord[], traffic: Car[]): void => {
+const updateCar = (
+	car: Car,
+	roadBorders?: Coord[][],
+	traffic?: Car[]
+): void => {
 	if (!car.damaged) {
 		moveCar(car);
 		car.polygon = getCarPolygon(car);
@@ -78,6 +156,22 @@ const updateCar = (car: Car, roadBorders: Coord[], traffic: Car[]): void => {
 			car.controls.reverse = outputs[3] > 0.5; //?
 		}
 	}
+};
+
+export const drawSimulation = (ctx, time, frameCount) => {
+	ctx.reset();
+	ctx.canvas.height = window.innerHeight * 0.5;
+	firstCar = cars.reduce((prev, curr) => (prev.y < curr.y ? prev : curr));
+	traffic.forEach((tCar) => updateCar(tCar));
+	cars.forEach((car) => updateCar(car, getRoadBorders(), traffic));
+	ctx.save();
+	ctx.translate(0, -firstCar.y + window.innerHeight * 0.4);
+	drawRoad(ctx);
+	traffic.forEach((tCar) => drawCar(ctx, "red", tCar));
+	ctx.globalAlpha = 0.2;
+	cars.forEach((car) => drawCar(ctx, "blue", car));
+	ctx.globalAlpha = 1;
+	drawCar(ctx, "blue", firstCar, true);
 };
 
 const moveCar = (car: Car): void => {
@@ -119,9 +213,10 @@ const getCarPolygon = (car: Car): Coord[] => {
 
 const getCarDamage = (
 	car: Car,
-	roadBorders: Coord[],
+	roadBorders: Coord[][],
 	traffic: Car[]
 ): boolean => {
+	if (!roadBorders) return false;
 	return (
 		roadBorders.some((roadBorder) => polyIntersect(car.polygon, roadBorder)) ||
 		traffic.some((trafficCar) => polyIntersect(car.polygon, trafficCar.polygon))

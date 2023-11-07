@@ -1,6 +1,4 @@
-export const lerp = (A, B, t) => {
-	return A + (B - A) * t;
-};
+export const lerp = (A, B, t) => A + (B - A) * t;
 
 export const getIntersection = (A, B, C, D) => {
 	const tTop = (D.x - C.x) * (A.y - C.y) - (D.y - C.y) * (A.x - C.x);

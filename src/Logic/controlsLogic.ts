@@ -1,7 +1,7 @@
 import { ControlType, Controls } from "../types";
 
 export const makeControls = (type: ControlType): Controls => {
-	//"KEYS" === type && addKeyboardListeners();
+	// "KEYS" === type && addKeyboardListeners();
 	return {
 		forward: "DUMMY" === type,
 		reverse: false,
