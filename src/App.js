@@ -1,21 +1,23 @@
+import React, { useEffect } from "react";
 import { Box, Typography } from "@mui/material";
 import { Canvas } from "./Components/Canvas";
-import { init } from "./Logic/mainLogic";
-import { drawFirstCarNetwork } from "./Logic/networkLogic";
-import { drawSimulation, restartSimulation } from "./Logic/carLogic";
+import {
+	drawFirstCarNetwork,
+	drawCarSim,
+} from "./Logic/CarSimulation/carLogic";
 import png from "./Assets/bg.jpg";
 import { Options } from "./Components/Options";
+import { init } from "./Logic/CarSimulation/carSimEntry";
 
 export const App = () => {
 	document.body.style = "margin: 0";
 
-	init();
-	restartSimulation();
+	useEffect(init, []);
 
 	return (
 		<Box
 			display={"flex"}
-			sx={{ backgroundImage: `url(${png})` }}
+			sx={{ backgroundImage: `url(${png})`, backgroundSize: "100% 100%" }}
 			flexDirection={"column"}
 			alignItems={"center"}
 			height={window.innerHeight}
@@ -33,7 +35,7 @@ export const App = () => {
 				width={"100%"}
 				height={"88%"}
 			>
-				<Canvas draw={drawSimulation} />
+				<Canvas draw={drawCarSim} />
 				<Options />
 				<Canvas draw={drawFirstCarNetwork} />
 			</Box>

@@ -1,7 +1,12 @@
-import { Car, ControlType, Coord } from "../types";
+import { Car, ControlType, Coord } from "../../types";
 import { makeControls } from "./controlsLogic";
-import { generateNumbersInRange, polyIntersect } from "./logicUtils";
-import { makeNetwork, mutateNetwork, networkFeedForward } from "./networkLogic";
+import { generateNumbersInRange, polyIntersect } from "../logicUtils";
+import {
+	drawNetwork,
+	makeNetwork,
+	mutateNetwork,
+	networkFeedForward,
+} from "../networkLogic";
 import {
 	drawRoad,
 	getLaneCenter,
@@ -9,6 +14,13 @@ import {
 	getRoadBorders,
 } from "./roadLogic";
 import { drawSensor, makeSensor, updateSensor } from "./sensorLogic";
+import redCar from "../../Assets/redCar.jpg";
+import blueCar from "../../Assets/blueCar.jpg";
+
+const carImg = new Image();
+carImg.src = blueCar;
+const trafficImg = new Image();
+trafficImg.src = redCar;
 
 let cars: Car[] = [];
 let traffic: Car[] = [];
@@ -49,7 +61,14 @@ const makeCar = (
 	return car;
 };
 
-export const restartSimulation = () => {
+export const drawFirstCarNetwork = (ctx, time, frameCount) => {
+	ctx.reset();
+	ctx.canvas.height = window.innerHeight * 0.5;
+	ctx.lineDashOffset = -time / 50;
+	drawNetwork(ctx, firstCar?.brain);
+};
+
+export const restartSim = () => {
 	clearTraffic();
 	generateCars(1500);
 	generateTraffic();
@@ -67,14 +86,13 @@ const generateCars = (numOfCars: number) => {
 	}
 };
 
-export const getFirstCar = () => firstCar;
-export const clearTraffic = () => {
+const clearTraffic = () => {
 	traffic = [];
 	clearTimeout(trafficId);
 	clearInterval(trafficId);
 };
 
-export const generateTraffic = () => {
+const generateTraffic = () => {
 	traffic.push(
 		makeCar(getLaneCenter(2), -300, 30, 50, 2, 0.2, "DUMMY"),
 		makeCar(getLaneCenter(1), -600, 30, 50, 2, 0.2, "DUMMY"),
@@ -87,12 +105,16 @@ export const generateTraffic = () => {
 		makeCar(getLaneCenter(3), -1200, 30, 50, 2, 0.2, "DUMMY"),
 		makeCar(getLaneCenter(4), -1200, 30, 50, 2, 0.2, "DUMMY")
 	);
-	trafficId = setTimeout(setTrafficInterval, 27000);
+	trafficId = setTimeout(
+		() => (trafficId = setInterval(spawnTraffic, 2000)),
+		27000
+	);
 };
 
-const setTrafficInterval = () => (trafficId = setInterval(spawnTraffic, 2000));
-
 const spawnTraffic = () => {
+	const trafficImg = new Image();
+	trafficImg.src = "../../Assets/redCar.jpg";
+
 	const numToSpawn = generateNumbersInRange(1, getLaneCount() - 1, 1)[0];
 	const carLanes = generateNumbersInRange(0, getLaneCount() - 1, numToSpawn);
 
@@ -116,21 +138,23 @@ export const filterUselessCars = () => {
 
 const drawCar = (
 	ctx: any,
-	color: string = "black",
 	car: Car,
 	shouldDrawSensor: boolean = false
 ): void => {
-	if (car.damaged) ctx.fillStyle = "gray";
-	else ctx.fillStyle = color;
 	if (car.sensor && shouldDrawSensor) {
 		drawSensor(ctx, car.sensor);
 	}
-	ctx.beginPath();
-	ctx.moveTo(car.polygon[0].x, car.polygon[0].y);
-	for (let i = 1; i < car.polygon.length; i++) {
-		ctx.lineTo(car.polygon[i].x, car.polygon[i].y);
-	}
-	ctx.fill();
+	ctx.save();
+	ctx.translate(car.x, car.y);
+	ctx.rotate(-car.angle);
+	ctx.drawImage(
+		car.brain ? carImg : trafficImg,
+		-car.width / 2,
+		-car.height / 2,
+		car.width,
+		car.height
+	);
+	ctx.restore();
 };
 
 const updateCar = (
@@ -158,7 +182,8 @@ const updateCar = (
 	}
 };
 
-export const drawSimulation = (ctx, time, frameCount) => {
+export const drawCarSim = (ctx, time, frameCount) => {
+	if (cars.length === 0) return;
 	ctx.reset();
 	ctx.canvas.height = window.innerHeight * 0.5;
 	firstCar = cars.reduce((prev, curr) => (prev.y < curr.y ? prev : curr));
@@ -167,11 +192,11 @@ export const drawSimulation = (ctx, time, frameCount) => {
 	ctx.save();
 	ctx.translate(0, -firstCar.y + window.innerHeight * 0.4);
 	drawRoad(ctx);
-	traffic.forEach((tCar) => drawCar(ctx, "red", tCar));
+	traffic.forEach((tCar) => drawCar(ctx, tCar));
 	ctx.globalAlpha = 0.2;
-	cars.forEach((car) => drawCar(ctx, "blue", car));
+	cars.forEach((car) => drawCar(ctx, car));
 	ctx.globalAlpha = 1;
-	drawCar(ctx, "blue", firstCar, true);
+	drawCar(ctx, firstCar, true);
 };
 
 const moveCar = (car: Car): void => {

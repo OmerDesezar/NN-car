@@ -1,4 +1,4 @@
-import { ControlType, Controls } from "../types";
+import { ControlType, Controls } from "../../types";
 
 export const makeControls = (type: ControlType): Controls => {
 	// "KEYS" === type && addKeyboardListeners();

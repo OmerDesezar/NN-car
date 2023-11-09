@@ -1,5 +1,5 @@
-import { Coord, Road } from "../types";
-import { lerp } from "./logicUtils";
+import { Coord, Road } from "../../types";
+import { lerp } from "../logicUtils";
 
 let road: Road = null;
 

@@ -1,5 +1,4 @@
 import { Network, NetworkLevel } from "../types";
-import { getFirstCar } from "./carLogic";
 import { getRGBA, lerp } from "./logicUtils";
 
 export const makeNetwork = (neuronCount: number[]): Network => {
@@ -35,6 +34,37 @@ const randomizeLevel = (level: NetworkLevel): void => {
 	}
 };
 
+export const mutateNetwork = (network: Network, amount: number = 1): void => {
+	network.levels.forEach((level) => {
+		for (let i = 0; i < level.biases.length; i++) {
+			level.biases[i] = lerp(level.biases[i], Math.random() * 2 - 1, amount);
+		}
+		for (let i = 0; i < level.weights.length; i++) {
+			for (let j = 0; j < level.weights[i].length; j++) {
+				level.weights[i][j] = lerp(
+					level.weights[i][j],
+					Math.random() * 2 - 1,
+					amount
+				);
+			}
+		}
+	});
+};
+
+export const networkFeedForward = (
+	givenInputs: number[],
+	network: Network
+): number[] => {
+	let outputs = levelFeedForward(givenInputs, network.levels[0]);
+	for (let i = 1; i < network.levels.length; i++) {
+		outputs = levelFeedForward(outputs, network.levels[i]);
+	}
+	network.levels[network.levels.length - 1].outputs = outputs.map((output) =>
+		output > 0.5 ? 1 : 0
+	);
+	return network.levels[network.levels.length - 1].outputs;
+};
+
 const levelFeedForward = (
 	givenInputs: number[],
 	level: NetworkLevel
@@ -53,45 +83,8 @@ const levelFeedForward = (
 	return level.outputs;
 };
 
-export const networkFeedForward = (
-	givenInputs: number[],
-	network: Network
-): number[] => {
-	let outputs = levelFeedForward(givenInputs, network.levels[0]);
-	for (let i = 1; i < network.levels.length; i++) {
-		outputs = levelFeedForward(outputs, network.levels[i]);
-	}
-	network.levels[network.levels.length - 1].outputs = outputs.map((output) =>
-		output > 0.5 ? 1 : 0
-	);
-	return network.levels[network.levels.length - 1].outputs;
-};
-
-export const mutateNetwork = (network: Network, amount: number = 1): void => {
-	network.levels.forEach((level) => {
-		for (let i = 0; i < level.biases.length; i++) {
-			level.biases[i] = lerp(level.biases[i], Math.random() * 2 - 1, amount);
-		}
-		for (let i = 0; i < level.weights.length; i++) {
-			for (let j = 0; j < level.weights[i].length; j++) {
-				level.weights[i][j] = lerp(
-					level.weights[i][j],
-					Math.random() * 2 - 1,
-					amount
-				);
-			}
-		}
-	});
-};
-
-export const drawFirstCarNetwork = (ctx, time, frameCount) => {
-	ctx.reset();
-	ctx.canvas.height = window.innerHeight * 0.5;
-	ctx.lineDashOffset = -time / 50;
-	drawNetwork(ctx, getFirstCar().brain);
-};
-
 export const drawNetwork = (ctx: any, network: Network): void => {
+	if (!network) return;
 	const margin = 30;
 	const left = margin;
 	const top = margin;
@@ -151,7 +144,7 @@ const drawNetworkLevel = (
 		ctx.fill();
 		ctx.beginPath();
 		ctx.arc(x, bottom, nodeRadius, 0, Math.PI * 2);
-		ctx.fillStyle = getRGBA(inputs[i]);
+		ctx.fillStyle = getRGBA(inputs[i], true);
 		ctx.fill();
 	}
 	for (let i = 0; i < outputs.length; i++) {
@@ -162,7 +155,7 @@ const drawNetworkLevel = (
 		ctx.fill();
 		ctx.beginPath();
 		ctx.arc(x, top, nodeRadius, 0, Math.PI * 2);
-		ctx.fillStyle = getRGBA(outputs[i]);
+		ctx.fillStyle = getRGBA(outputs[i], true);
 		ctx.fill();
 
 		ctx.beginPath();

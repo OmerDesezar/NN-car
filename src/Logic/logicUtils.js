@@ -1,3 +1,5 @@
+import theme from "../theme";
+
 export const lerp = (A, B, t) => A + (B - A) * t;
 
 export const getIntersection = (A, B, C, D) => {
@@ -34,11 +36,20 @@ export const polyIntersect = (poly1, poly2) => {
 	return false;
 };
 
-export const getRGBA = (value) => {
+export const getRGBA = (value, yellow = false) => {
 	const alpha = Math.abs(value);
-	const R = value < 0 ? 0 : 255;
-	const G = R;
-	const B = value > 0 ? 0 : 255;
+	const alphaHexValue = Math.round(Math.abs(value) * 255)
+		.toString(16)
+		.padStart(2, "0");
+	let color = null;
+	if (value < 0 && yellow) color = theme.palette.networkColors.blue;
+	if (value > 0 && yellow) color = theme.palette.networkColors.white;
+	if (value < 0 && !yellow) color = theme.palette.networkColors.red;
+	if (value > 0 && !yellow) color = theme.palette.networkColors.green;
+	return color + alphaHexValue;
+	const R = yellow ? (value < 0 ? 0 : 246) : value > 0 ? 0 : 255;
+	const G = yellow ? (value < 0 ? 0 : 250) : value < 0 ? 0 : 255;
+	const B = yellow ? (value > 0 ? 0 : 255) : 0;
 	return `rgba(${R},${G},${B},${alpha})`;
 };
 

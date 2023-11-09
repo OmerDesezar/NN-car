@@ -1,5 +1,5 @@
-import { Car, Coord, Sensor } from "../types";
-import { getIntersection, lerp } from "./logicUtils";
+import { Car, Coord, Sensor } from "../../types";
+import { getIntersection, lerp } from "../logicUtils";
 
 export const makeSensor = (car: Car): Sensor => {
 	return {

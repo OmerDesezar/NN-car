@@ -1,11 +1,12 @@
 import React, { useRef, useEffect } from "react";
 import { styled } from "@mui/material/styles";
-import { SIMULATION_WIDTH } from "../Logic/mainLogic";
+
+export const SIMULATION_WIDTH = 600;
 
 const StyledCanvas = styled("canvas")({
 	backgroundColor: "gray",
 	borderRadius: "3rem",
-	border: "4px solid lightblue",
+	border: "4px solid #FFC436",
 	width: SIMULATION_WIDTH,
 });
 
